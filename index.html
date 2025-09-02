@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Zealand Budget Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            color: #000000;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #666666;
+            font-weight: 300;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .control-group {
+            border: 1px solid #e0e0e0;
+            padding: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 400;
+            margin-bottom: 12px;
+            color: #000000;
+            font-size: 1rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cccccc;
+            background: #ffffff;
+            font-size: 1rem;
+            color: #000000;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #000000;
+        }
+
+        .results {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 40px;
+        }
+
+        .results-header {
+            background: #000000;
+            color: #ffffff;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .results-header h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+
+        .results-header p {
+            font-size: 0.9rem;
+            color: #cccccc;
+        }
+
+        .totals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .total-card {
+            padding: 30px 20px;
+            text-align: center;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .total-card:last-child {
+            border-right: none;
+        }
+
+        .total-label {
+            font-size: 0.85rem;
+            color: #666666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 400;
+        }
+
+        .total-amount {
+            font-size: 1.8rem;
+            font-weight: 300;
+            color: #000000;
+        }
+
+        .breakdown {
+            padding: 40px;
+        }
+
+        .breakdown-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .breakdown h3 {
+            color: #000000;
+            font-size: 1.3rem;
+            font-weight: 400;
+        }
+
+        .currency-selector {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+
+        .currency-selector span {
+            margin-right: 15px;
+            font-size: 0.9rem;
+            color: #666666;
+        }
+
+        .currency-btn {
+            padding: 8px 16px;
+            border: 1px solid #cccccc;
+            background: #ffffff;
+            cursor: pointer;
+            font-weight: 400;
+            font-size: 0.9rem;
+            color: #000000;
+        }
+
+        .currency-btn.active {
+            background: #000000;
+            color: #ffffff;
+            border-color: #000000;
+        }
+
+        .currency-btn:hover:not(.active) {
+            background: #f5f5f5;
+        }
+
+        .expense-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+        }
+
+        .expense-table thead {
+            background: #f8f8f8;
+        }
+
+        .expense-table th,
+        .expense-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 400;
+        }
+
+        .expense-table th {
+            text-align: left;
+            font-size: 0.9rem;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .expense-table th:not(:first-child) {
+            text-align: right;
+        }
+
+        .expense-table td {
+            font-size: 0.95rem;
+            color: #000000;
+        }
+
+        .expense-table tbody tr:hover {
+            background: #f8f8f8;
+        }
+
+        .expense-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .amount-cell {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .total-row {
+            background: #f0f0f0 !important;
+            font-weight: 600;
+            border-top: 2px solid #000000;
+        }
+
+        .exchange-rate {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.85rem;
+            color: #999999;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .breakdown-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .currency-selector {
+                justify-content: center;
+            }
+            
+            .totals-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .total-card {
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            
+            .total-card:last-child {
+                border-bottom: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>New Zealand Budget Calculator</h1>
+            <p>Plan your finances for living in New Zealand</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="region">Choose Region:</label>
+                <select id="region">
+                    <option value="auckland">Urban Auckland</option>
+                    <option value="waikato">Urban Waikato/Bay of Plenty</option>
+                    <option value="wellington">Urban Wellington</option>
+                    <option value="north_island">Rest of Urban North Island</option>
+                    <option value="south_island">Urban South Island</option>
+                    <option value="rural">Rural Areas</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="household">Household Type:</label>
+                <select id="household">
+                    <option value="couple_only">Couple Only</option>
+                    <option value="couple_1_child">Couple with 1 Child</option>
+                    <option value="couple_2_children">Couple with 2 Children</option>
+                    <option value="couple_3_children">Couple with 3+ Children</option>
+                    <option value="single_parent">Single Parent with Child(ren)</option>
+                    <option value="single_person">Single Person</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="housing">Housing Option:</label>
+                <select id="housing">
+                    <option value="both">Include Both Rent & Mortgage</option>
+                    <option value="rent">Rent Only</option>
+                    <option value="mortgage">Mortgage Only</option>
+                    <option value="neither">Neither (Own Property Outright)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="transport">Transportation Option:</label>
+                <select id="transport">
+                    <option value="both">Include Both Car & Public Transport</option>
+                    <option value="car">Car Only (Private Vehicle)</option>
+                    <option value="public">Public Transport Only</option>
+                    <option value="neither">Neither (Walking/Cycling Only)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="insurance">Insurance Options:</label>
+                <select id="insurance">
+                    <option value="all">Include All Insurance Types</option>
+                    <option value="essential">Essential Only (House/Contents, Vehicle, Medical)</option>
+                    <option value="minimal">Minimal (Vehicle, Medical Only)</option>
+                    <option value="none">No Insurance</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="results">
+            <div class="results-header">
+                <h2>Your Estimated Living Costs</h2>
+                <p id="selection-display"></p>
+            </div>
+
+            <div class="totals-grid">
+                <div class="total-card">
+                    <div class="total-label">Weekly Total</div>
+                    <div class="total-amount" id="weekly-total">$0</div>
+                </div>
+                <div class="total-card">
+                    <div class="total-label">Monthly Total</div>
+                    <div class="total-amount" id="monthly-total">$0</div>
+                </div>
+                <div class="total-card">
+                    <div class="total-label">Annual Total</div>
+                    <div class="total-amount" id="annual-total">$0</div>
+                </div>
+            </div>
+
+            <div class="breakdown">
+                <div class="breakdown-header">
+                    <h3>Expense Breakdown</h3>
+                    <div class="currency-selector">
+                        <span>Currency:</span>
+                        <button class="currency-btn active" data-currency="NZD">NZD</button>
+                        <button class="currency-btn" data-currency="USD">USD</button>
+                        <button class="currency-btn" data-currency="VND">VND</button>
+                    </div>
+                </div>
+                
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Expense Category</th>
+                            <th>Weekly Cost</th>
+                            <th>Monthly Cost</th>
+                            <th>Annual Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expense-tbody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="exchange-rate">
+            Exchange rates: 1 NZD = 0.60 USD = 15,200 VND (approximate rates as of 2025)
+        </div>
+    </div>
+
+    <script>
+        // Household expenditure data from the PDF
+        const expenditureData = {
+            auckland: {
+                couple_only: [361.53, 465.89, 709.23, 95.39, 42.32, 34.72, 129.27, 23.53, 38.62, 86.21, 93.18, 26.28, 103.31, 105.42, 44.11, 54.24],
+                couple_1_child: [446.68, 586.40, 1067.90, 51.39, 50.12, 42.00, 146.68, 24.69, 35.67, 90.65, 96.03, 26.70, 58.57, 105.63, 46.64, 52.34],
+                couple_2_children: [445.73, 536.17, 907.30, 88.22, 53.50, 37.99, 114.81, 19.84, 33.66, 66.06, 123.15, 31.13, 88.64, 69.54, 39.89, 65.85],
+                couple_3_children: [589.98, 488.79, 2431.48, 21.32, 76.29, 41.37, 269.72, 24.38, 172.64, 188.99, 125.89, 24.69, 72.28, 93.92, 74.71, 89.48],
+                single_parent: [257.58, 465.26, 585.34, 16.99, 46.01, 26.17, 78.93, 16.88, 14.35, 42.84, 64.16, 16.36, 27.23, 15.93, 21.63, 29.12],
+                single_person: [205.77, 389.59, 649.18, 65.95, 33.77, 28.39, 128.63, 17.52, 28.49, 82.20, 54.56, 16.67, 62.68, 31.24, 24.69, 30.81]
+            },
+            waikato: {
+                couple_only: [333.35, 495.01, 498.28, 64.48, 51.60, 38.41, 82.52, 11.29, 35.14, 79.14, 95.08, 23.43, 90.12, 84.95, 32.61, 42.21],
+                couple_1_child: [381.57, 495.65, 639.79, 53.50, 54.56, 45.27, 102.67, 14.25, 31.45, 78.09, 92.12, 18.89, 48.44, 80.73, 28.17, 48.01],
+                couple_2_children: [420.94, 501.87, 566.77, 17.52, 57.51, 47.70, 101.41, 10.02, 27.54, 148.05, 61.52, 21.32, 45.90, 110.38, 39.47, 60.47],
+                couple_3_children: [487.94, 639.26, 766.74, 21.32, 71.97, 47.17, 242.28, 12.77, 37.78, 120.40, 115.87, 36.41, 72.28, 54.24, 56.88, 63.84],
+                single_parent: [254.52, 387.27, 585.34, 16.99, 59.83, 27.65, 39.36, 18.47, 25.54, 42.84, 75.66, 22.37, 27.23, 33.24, 18.89, 35.77],
+                single_person: [156.49, 291.04, 865.72, 25.01, 38.09, 27.23, 84.21, 6.12, 27.33, 37.99, 48.75, 12.35, 36.19, 43.16, 16.36, 37.14]
+            },
+            wellington: {
+                couple_only: [357.62, 455.86, 707.43, 25.01, 54.13, 40.52, 121.99, 17.41, 56.03, 32.08, 104.47, 23.00, 102.04, 61.41, 52.55, 58.67],
+                couple_1_child: [489.00, 412.49, 622.80, 22.79, 62.47, 42.00, 149.84, 12.45, 56.98, 59.62, 122.83, 23.00, 36.51, 70.70, 31.34, 79.25],
+                couple_2_children: [565.40, 509.36, 860.02, 44.74, 64.90, 46.54, 93.18, 8.34, 50.76, 85.37, 121.14, 26.70, 50.23, 87.69, 59.52, 54.24],
+                couple_3_children: [396.66, 488.36, 735.71, 10.97, 72.18, 37.25, 101.83, 11.92, 33.66, 120.40, 113.97, 20.05, 72.28, 61.52, 56.24, 77.03],
+                single_parent: [181.08, 545.03, 473.27, 29.12, 46.01, 30.92, 58.46, 18.47, 25.54, 42.84, 212.31, 18.78, 27.23, 19.42, 25.64, 45.38],
+                single_person: [189.10, 247.35, 490.48, 34.30, 35.35, 30.92, 228.56, 8.13, 50.65, 42.84, 53.82, 11.61, 63.95, 46.54, 26.49, 42.21]
+            },
+            north_island: {
+                couple_only: [306.02, 491.32, 537.22, 128.74, 55.29, 39.04, 104.26, 15.93, 43.26, 51.07, 116.39, 23.43, 78.40, 107.32, 53.71, 52.23],
+                couple_1_child: [421.25, 464.94, 579.12, 93.49, 63.74, 36.09, 99.51, 21.74, 28.07, 78.83, 106.37, 17.62, 47.06, 90.01, 32.08, 37.67],
+                couple_2_children: [437.08, 432.12, 551.05, 13.30, 66.06, 42.21, 94.23, 25.75, 38.83, 67.32, 138.76, 26.38, 34.40, 37.14, 21.42, 63.63],
+                couple_3_children: [476.55, 529.62, 601.70, 21.32, 106.16, 49.17, 146.15, 19.31, 172.64, 120.40, 137.81, 25.22, 72.28, 33.24, 17.73, 37.25],
+                single_parent: [215.37, 409.01, 585.34, 16.99, 60.25, 31.87, 100.46, 17.20, 25.54, 42.84, 48.22, 18.04, 27.23, 14.03, 25.54, 46.75],
+                single_person: [136.13, 305.49, 437.40, 26.38, 36.62, 27.75, 38.52, 16.99, 33.24, 54.77, 46.43, 12.87, 35.56, 66.37, 23.00, 42.00]
+            },
+            south_island: {
+                couple_only: [297.89, 389.81, 691.92, 57.72, 56.03, 38.83, 137.29, 11.71, 43.69, 55.08, 106.26, 24.16, 74.18, 70.38, 48.22, 57.51],
+                couple_1_child: [432.44, 313.62, 484.88, 17.94, 66.27, 40.52, 149.00, 26.91, 39.89, 83.15, 93.60, 26.49, 62.26, 75.45, 32.61, 55.08],
+                couple_2_children: [436.34, 521.39, 560.65, 28.81, 77.98, 41.15, 141.82, 11.92, 44.64, 102.89, 109.53, 22.48, 59.52, 59.94, 48.44, 70.70],
+                couple_3_children: [463.46, 317.42, 429.69, 14.03, 80.62, 38.09, 100.46, 19.10, 35.56, 49.17, 118.29, 24.38, 70.38, 44.11, 27.33, 69.86],
+                single_parent: [245.13, 432.75, 358.36, 27.12, 58.04, 34.40, 107.85, 11.40, 33.45, 66.69, 81.57, 15.62, 18.36, 113.97, 26.80, 54.45],
+                single_person: [148.05, 341.90, 407.01, 55.08, 38.52, 28.60, 105.21, 14.25, 31.66, 43.26, 63.00, 14.98, 51.28, 43.26, 18.47, 38.83]
+            },
+            rural: {
+                couple_only: [308.97, 216.75, 595.68, 112.59, 60.15, 44.74, 105.52, 26.38, 38.73, 114.60, 158.81, 26.49, 110.59, 94.97, 38.83, 78.30],
+                couple_1_child: [384.21, 467.26, 574.68, 48.65, 74.92, 60.25, 81.36, 22.05, 49.17, 111.75, 189.84, 22.05, 117.98, 61.41, 45.38, 93.92],
+                couple_2_children: [530.15, 298.63, 796.49, 17.52, 69.33, 41.89, 96.55, 29.55, 27.65, 46.75, 170.63, 22.48, 42.10, 55.72, 51.50, 68.91],
+                couple_3_children: [466.63, 507.25, 601.70, 19.94, 85.37, 31.66, 146.15, 19.10, 131.06, 101.30, 142.25, 20.68, 71.76, 110.91, 56.24, 62.36],
+                single_parent: [223.50, 393.60, 585.34, 20.05, 58.57, 38.20, 65.11, 17.73, 29.34, 48.12, 92.65, 16.88, 24.80, 19.52, 22.16, 39.68],
+                single_person: [149.63, 302.43, 628.29, 46.54, 39.15, 29.12, 73.23, 16.78, 30.50, 29.76, 82.31, 15.51, 55.72, 45.59, 24.59, 54.24]
+            }
+        };
+
+        const categories = [
+            "Food & Groceries",
+            "Rent",
+            "Mortgage",
+            "Passenger Transport", 
+            "Gas/Electricity",
+            "Telephone/Mobile/Internet",
+            "Clothing & Footwear",
+            "Rates",
+            "House/Contents Insurance",
+            "Property Maintenance",
+            "Private Vehicle Costs",
+            "Vehicle Insurance",
+            "Medical Insurance", 
+            "Health/Medical Expenses",
+            "Life Insurance",
+            "Insurance Other & Combinations"
+        ];
+
+        // Exchange rates (approximate as of 2025)
+        const exchangeRates = {
+            NZD: 1,
+            USD: 0.60,
+            VND: 15200
+        };
+
+        const currencySymbols = {
+            NZD: '$',
+            USD: '$',
+            VND: '₫'
+        };
+
+        let currentCurrency = 'NZD';
+
+        function formatCurrency(amount, currency) {
+            const convertedAmount = amount * exchangeRates[currency];
+            const symbol = currencySymbols[currency];
+            
+            if (currency === 'VND') {
+                if (convertedAmount >= 1000000) {
+                    return `${symbol}${(convertedAmount / 1000000).toFixed(1)}m`;
+                } else if (convertedAmount >= 1000) {
+                    return `${symbol}${Math.round(convertedAmount / 1000)}k`;
+                } else {
+                    return `${symbol}${Math.round(convertedAmount)}`;
+                }
+            } else {
+                const rounded = Math.round(convertedAmount);
+                return `${symbol}${rounded.toLocaleString()}`;
+            }
+        }
+
+        function updateCalculation() {
+            const region = document.getElementById('region').value;
+            const household = document.getElementById('household').value;
+            const housing = document.getElementById('housing').value;
+            const transport = document.getElementById('transport').value;
+            const insurance = document.getElementById('insurance').value;
+            
+            let data = [...expenditureData[region][household]];
+            
+            // Adjust based on housing option
+            switch(housing) {
+                case 'rent':
+                    data[2] = 0; // Remove mortgage
+                    // For rent, tenant typically doesn't pay rates, house insurance, or property maintenance
+                    data[7] = 0; // Remove rates
+                    data[8] = 0; // Remove house/contents insurance
+                    data[9] = 0; // Remove property maintenance
+                    break;
+                case 'mortgage':
+                    data[1] = 0; // Remove rent
+                    break;
+                case 'neither':
+                    data[1] = 0; // Remove rent
+                    data[2] = 0; // Remove mortgage
+                    break;
+                // 'both' keeps original data
+            }
+            
+            // Adjust based on transport option
+            switch(transport) {
+                case 'car':
+                    data[3] = 0; // Remove passenger transport
+                    break;
+                case 'public':
+                    data[10] = 0; // Remove private vehicle costs
+                    data[11] = 0; // Remove vehicle insurance
+                    break;
+                case 'neither':
+                    data[3] = 0;  // Remove passenger transport
+                    data[10] = 0; // Remove private vehicle costs
+                    data[11] = 0; // Remove vehicle insurance
+                    break;
+                // 'both' keeps original data
+            }
+            
+            // Adjust based on insurance option
+            switch(insurance) {
+                case 'essential':
+                    // Keep house/contents (8), vehicle (11), medical (12)
+                    // Remove life (14) and other combinations (15)
+                    data[14] = 0; // Remove life insurance
+                    data[15] = 0; // Remove insurance other & combinations
+                    break;
+                case 'minimal':
+                    // Keep only vehicle (11) and medical (12) if applicable
+                    data[8] = 0;  // Remove house/contents insurance
+                    data[12] = 0; // Remove medical insurance (keep basic medical expenses)
+                    data[14] = 0; // Remove life insurance
+                    data[15] = 0; // Remove insurance other & combinations
+                    break;
+                case 'none':
+                    data[8] = 0;  // Remove house/contents insurance
+                    data[11] = 0; // Remove vehicle insurance
+                    data[12] = 0; // Remove medical insurance
+                    data[14] = 0; // Remove life insurance
+                    data[15] = 0; // Remove insurance other & combinations
+                    break;
+                // 'all' keeps original data
+            }
+            
+            const weeklyTotal = data.reduce((sum, amount) => sum + amount, 0);
+            const monthlyTotal = weeklyTotal * 4.33; // Average weeks per month
+            const annualTotal = weeklyTotal * 52;
+            
+            // Update totals
+            document.getElementById('weekly-total').textContent = formatCurrency(weeklyTotal, currentCurrency);
+            document.getElementById('monthly-total').textContent = formatCurrency(monthlyTotal, currentCurrency);
+            document.getElementById('annual-total').textContent = formatCurrency(annualTotal, currentCurrency);
+            
+            // Update selection display
+            const regionText = document.getElementById('region').selectedOptions[0].text;
+            const householdText = document.getElementById('household').selectedOptions[0].text;
+            const housingText = document.getElementById('housing').selectedOptions[0].text;
+            const transportText = document.getElementById('transport').selectedOptions[0].text;
+            const insuranceText = document.getElementById('insurance').selectedOptions[0].text;
+            document.getElementById('selection-display').textContent = 
+                `${regionText} - ${householdText} - ${housingText} - ${transportText} - ${insuranceText}`;
+            
+            // Update breakdown table
+            updateBreakdownTable(data);
+        }
+
+        function updateBreakdownTable(data) {
+            const tbody = document.getElementById('expense-tbody');
+            tbody.innerHTML = '';
+            
+            let total = 0;
+            
+            categories.forEach((category, index) => {
+                const weeklyAmount = data[index];
+                const monthlyAmount = weeklyAmount * 4.33;
+                const annualAmount = weeklyAmount * 52;
+                total += weeklyAmount;
+                
+                if (weeklyAmount > 0) { // Only show categories with costs
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${category}</td>
+                        <td class="amount-cell">${formatCurrency(weeklyAmount, currentCurrency)}</td>
+                        <td class="amount-cell">${formatCurrency(monthlyAmount, currentCurrency)}</td>
+                        <td class="amount-cell">${formatCurrency(annualAmount, currentCurrency)}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            });
+            
+            // Add total row
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'total-row';
+            totalRow.innerHTML = `
+                <td><strong>TOTAL</strong></td>
+                <td class="amount-cell"><strong>${formatCurrency(total, currentCurrency)}</strong></td>
+                <td class="amount-cell"><strong>${formatCurrency(total * 4.33, currentCurrency)}</strong></td>
+                <td class="amount-cell"><strong>${formatCurrency(total * 52, currentCurrency)}</strong></td>
+            `;
+            tbody.appendChild(totalRow);
+        }
+
+        function changeCurrency(currency) {
+            currentCurrency = currency;
+            
+            // Update active button
+            document.querySelectorAll('.currency-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-currency="${currency}"]`).classList.add('active');
+            
+            // Recalculate with new currency
+            updateCalculation();
+        }
+
+        // Event listeners
+        document.getElementById('region').addEventListener('change', updateCalculation);
+        document.getElementById('household').addEventListener('change', updateCalculation);
+        document.getElementById('housing').addEventListener('change', updateCalculation);
+        document.getElementById('transport').addEventListener('change', updateCalculation);
+        document.getElementById('insurance').addEventListener('change', updateCalculation);
+
+        // Currency button listeners
+        document.querySelectorAll('.currency-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                changeCurrency(btn.dataset.currency);
+            });
+        });
+
+        // Initial calculation
+        updateCalculation();
+    </script>
+</body>
+</html>
